@@ -28,7 +28,7 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, path, 
     -- Our map
     local map = setmetatable({}, Map)
     prop = prop or {}
-    
+
     -- Public:
     map.name = name or "Unnamed Map"                        -- Name of the map
     map.width = width or 0                                  -- Width of the map in tiles
@@ -40,17 +40,17 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, path, 
     map.useSpriteBatch = prop.atl_useSpriteBatch            -- True = TileLayers use sprite batches
     map.visible = true                                      -- False = the map will not be drawn
     map.drawObjects = prop.atl_drawObjects                  -- True = object layers will be drawn
-    
-    map.viewX = prop.atl_viewX or 0                         -- X coord of the viewing screen. 
-    map.viewY = prop.atl_viewY or 0                         -- Y coord of the viewing screen. 
+
+    map.viewX = prop.atl_viewX or 0                         -- X coord of the viewing screen.
+    map.viewY = prop.atl_viewY or 0                         -- Y coord of the viewing screen.
     map.viewW = prop.atl_viewW or love.graphics.getWidth()  -- The width of the viewing screen
     map.viewH = prop.atl_viewH or love.graphics.getHeight() -- The height of the viewing screen
     map.viewScaling = 1                                     -- The game scaling
     map.viewPadding = 10                                    -- Padding for the view
-    
+
     map.offsetX = prop.atl_offsetX or 0  -- Drawing offset X
     map.offsetY = prop.atl_offsetY or 0  -- Drawing offset Y
-    
+
     map.layers  = {}            -- Layers of the map indexed by name
     map.tilesets = {}           -- Tilesets indexed by name
     map.tiles = {}              -- Tiles indexed by id
@@ -63,7 +63,7 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, path, 
     map._previousUseSpriteBatch = false -- The previous useSpiteBatch.
     map._tileClipboard  =   nil         -- The value that stored for tile copying and pasting.
     map._directory = path               -- The directory the map is in
-    
+
     -- Return the new map
     return map
 end
@@ -73,7 +73,7 @@ end
 function Map:newTileSet(...)
     local tileset = TileSet:new(...)
     local name = tileset.name
-    if self.tilesets[name] then 
+    if self.tilesets[name] then
         error(  string.format("Map:newTileSet - A tile set named \"%s\" already exists.", name) )
     end
     self.tilesets[name] = TileSet:new(...)
@@ -87,7 +87,7 @@ end
 function Map:newTileLayer(position, ...)
     local layer = TileLayer:new(self, ...)
     local name = layer.name
-    if self.layers[name] then 
+    if self.layers[name] then
         error( string.format("Map:newTileLayer - A layer named \"%s\" already exists.", name) )
     end
     self.layers[name] = layer
@@ -100,7 +100,7 @@ end
 function Map:newObjectLayer(position, ...)
     local layer = ObjectLayer:new(self, ...)
     local name = layer.name
-    if self.layers[name] then 
+    if self.layers[name] then
         error( string.format("Map:newObjectLayer - A layer named \"%s\" already exists.", name) )
     end
     self.layers[name] = layer
@@ -111,7 +111,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Add a custom layer to the map. You can include a predefined layer table or one will be created.
 function Map:newCustomLayer(name, position, layer)
-    if self.layers[name] then 
+    if self.layers[name] then
         error( string.format("Map:newCustomLayer - The layer name \"%s\" already exists.", name) )
     end
     self.layers[name] = layer or {name=name}
@@ -169,7 +169,7 @@ function Map:layerPosition(layer)
 end
 
 ---------------------------------------------------------------------------------------------------
--- Returns the position of the layer inside the map's layerOrder. The passed layers can be the 
+-- Returns the position of the layer inside the map's layerOrder. The passed layers can be the
 -- layer name, the layer tables themselves, or the layer positions.
 function Map:swapLayers(layer1, layer2)
     if type(layer1) ~= "number" then layer1 = self:layerPosition(layer1) end
@@ -203,7 +203,7 @@ local ix, iy
 function Map:toIso(a, b)
     a, b = a or 0, b or 0
     h, tw, th = self.height, self.tileWidth, self.tileHeight
-    ix = b - (h-1)*th/2 + (a*th)/tw 
+    ix = b - (h-1)*th/2 + (a*th)/tw
     iy = 2*b - ix
     return ix, iy
 end
@@ -232,42 +232,42 @@ end
 -- Returns the normal draw range
 function Map:getDrawRange()
     return self.viewX - self.viewPadding, self.viewY - self.viewPadding,
-            self.viewW/self.viewScaling + self.viewPadding*2, 
+            self.viewW/self.viewScaling + self.viewPadding*2,
             self.viewH/self.viewScaling + self.viewPadding*2
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Private Functions
 ----------------------------------------------------------------------------------------------------
--- This is an internal function used to update the map's _tileRange, _previousTileRange, and 
+-- This is an internal function used to update the map's _tileRange, _previousTileRange, and
 -- _specialRedraw
 local x1, y1, x2, y2, heightOffset, widthOffset, tr, ptr, layer
 function Map:_updateTileRange()
-    
+
     -- Offset to make sure we can always draw the highest and widest tile
     heightOffset = self._highestTile - self.tileHeight
     widthOffset = self._widestTile - self.tileWidth
-    
+
     -- Go through each layer
     for i = 1,#self.layerOrder do
         layer = self.layerOrder[i]
 
         -- If the layer is a TileLayer
         if layer.class == "TileLayer" then
-        
-            -- Get the draw range. 
+
+            -- Get the draw range.
             x1 = self.viewX * layer.parallaxX - self.viewPadding + layer.offsetX
             y1 = self.viewY * layer.parallaxY - self.viewPadding + layer.offsetY
             x2 = self.viewW/self.viewScaling + self.viewPadding*2
             y2 = self.viewH/self.viewScaling + self.viewPadding*2
-            
+
             -- Apply the offset
             x1 = x1 - self.offsetX - layer.offsetX
             y1 = y1 - self.offsetY - layer.offsetY
-        
+
             -- Calculate the _tileRange for orthogonal tiles
             if self.orientation == "orthogonal" then
-        
+
                 -- Limit the drawing range. We must make sure we can draw the tiles that are bigger
                 -- than the self's tileWidth and tileHeight.
                 if x1 and y1 and x2 and y2 then
@@ -275,18 +275,18 @@ function Map:_updateTileRange()
                     y2 = ceil((y2+heightOffset)/self.tileHeight)
                     x1 = floor((x1-widthOffset)/self.tileWidth)
                     y1 = floor(y1/self.tileHeight)
-            
+
                     -- Make sure that we stay within the boundry of the map
                     x1 = x1 > 0 and x1 or 0
                     y1 = y1 > 0 and y1 or 0
                     x2 = x2 < self.width and x2 or self.width - 1
                     y2 = y2 < self.height and y2 or self.height - 1
-            
+
                 else
                     -- If the drawing range isn't defined then we draw all the tiles
                     x1, y1, x2, y2 = 0, 0, self.width-1, self.height-1
                 end
-            
+
             -- Calculate the _tileRange for isometric tiles.
             else
                 -- If the drawRange is set
@@ -303,26 +303,26 @@ function Map:_updateTileRange()
                     y2 = self.height - 1
                 end
             end
-        
+
             -- Assign the new values to the tile range
             tr, ptr = layer._tileRange, layer._previousTileRange
             ptr[1], ptr[2], ptr[3], ptr[4] = tr[1], tr[2], tr[3], tr[4]
             tr[1], tr[2], tr[3], tr[4] =  x1, y1, x2, y2
-        
-            -- If the tile range or useSpriteBatch is different than the last frame then we need to 
+
+            -- If the tile range or useSpriteBatch is different than the last frame then we need to
             -- update its sprite batches.
-            layer._redraw = self.useSpriteBatch ~= self._previousUseSpriteBatch or 
+            layer._redraw = self.useSpriteBatch ~= self._previousUseSpriteBatch or
                             self._forceRedraw or
-                            tr[1] ~= ptr[1] or 
-                            tr[2] ~= ptr[2] or 
-                            tr[3] ~= ptr[3] or 
+                            tr[1] ~= ptr[1] or
+                            tr[2] ~= ptr[2] or
+                            tr[3] ~= ptr[3] or
                             tr[4] ~= ptr[4]
         end
     end
-    
+
     -- Set the previous useSpritebatch
     self._previousUseSpriteBatch = self.useSpriteBatch
-                          
+
     -- Reset the forced special redraw
     self._forceRedraw = false
 end

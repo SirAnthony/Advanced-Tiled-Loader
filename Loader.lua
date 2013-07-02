@@ -190,7 +190,7 @@ function Loader._expandMap(name, t)
            "Loader._expandMap - Map data is corrupt")
 
     -- We'll use these for temporary storage
-    local map, tileset, tilelayer, objectlayer, props
+    local tileset, tilelayer, objectlayer
     local props = {}
     
     -- Get the properties
