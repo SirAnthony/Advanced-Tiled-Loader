@@ -4,7 +4,7 @@
 -- Setup
 
 -- Import the other classes
-TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Mm]ap$", "") .. '.'
+TILED_LOADER_PATH = ({...})[1]:gsub("[%.\\/][Mm]ap$", "") .. '.'
 local Tile = require( TILED_LOADER_PATH .. "Tile")
 local TileSet = require( TILED_LOADER_PATH .. "TileSet")
 local TileLayer = require( TILED_LOADER_PATH .. "TileLayer")
@@ -241,7 +241,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- This is an internal function used to update the map's _tileRange, _previousTileRange, and 
 -- _specialRedraw
-local x1, y1, x2, y2, highOffset, widthOffset, tr, ptr, layer
+local x1, y1, x2, y2, heightOffset, widthOffset, tr, ptr, layer
 function Map:_updateTileRange()
     
     -- Offset to make sure we can always draw the highest and widest tile
@@ -271,7 +271,7 @@ function Map:_updateTileRange()
                 -- Limit the drawing range. We must make sure we can draw the tiles that are bigger
                 -- than the self's tileWidth and tileHeight.
                 if x1 and y1 and x2 and y2 then
-                    x2 = ceil(x2/self.tileWidth)
+                    x2 = ceil((x2+self._widestTile-self.tileWidth)/self.tileWidth)
                     y2 = ceil((y2+heightOffset)/self.tileHeight)
                     x1 = floor((x1-widthOffset)/self.tileWidth)
                     y1 = floor(y1/self.tileHeight)
